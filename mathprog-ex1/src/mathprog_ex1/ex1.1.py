@@ -86,8 +86,10 @@ def build_model(model: gp.Model, graph: nx.Graph):
 
     #model.addConstr(x1 + x2 <= 1,  name="c1")
 
-    #since we get multiple x vars for all edges, i don't know how to access them in the constraints.
+    #since we get multiple x vars for all edges, i don't know how to  represent this 
     model.addConstrs((x1 + x2 <= 1 for i, j in graph.edges), name="at_most_one_link")
+    #    model.addConstrs(((x1 + x2 <= 1 for i, j in graph.edges)for x1,x2 in x1,x2), name="at_most_one_link")
+
     model.addConstrs(
         (f[i, j] <= graph[i][j]["capacity_1"] * x1[i, j] + graph[i][j]["capacity_2"] * x2[i, j] for i, j in graph.edges),
         name="flow_capacity",
