@@ -48,6 +48,33 @@ def build_model(model: gp.Model, processing_times: np.ndarray, machine_sequences
     #
     # model.addConstrs(...)
 
+    t = model.addVars(
+        n_machines, n_jobs,
+        vtype=GRB.INTEGER,
+        lb=0,
+        name="starting time"
+    )
+
+    s = model.addVars(
+        n_machines, n_jobs, n_jobs,
+        vtype=GRB.BINARY,
+        name="OR decision slacks"
+    )
+
+    #job order
+    model.addConstrs(
+        t[machine_sequences[j,i+1],j] >= t[machine_sequences[j,i],j] + processing_times[j,machine_sequences[j,i]] for i in range(n_machines-1) for j in range(n_jobs)
+    )
+
+    large_const = 1000
+
+    # only one job at a time
+    model.addConstrs(t[i,j] + processing_times[j,i] <= t[i,k] + large_const * (1 - s[i,j,k]) for i in range(n_machines) for j in range(n_jobs) for k in range(n_jobs) if j != k)
+    model.addConstrs(t[i,j] + processing_times[j,i] <= t[i,k] + large_const * s[i,j,k] for i in range(n_machines) for j in range(n_jobs) for k in range(n_jobs) if j != k)
+
+
+    model.setObjective(gp.quicksum(t[machine_sequences[j, n_machines - 1], j] + processing_times[j,machine_sequences[j, n_machines - 1]] for j in range(n_jobs)), GRB.MINIMIZE) 
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
