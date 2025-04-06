@@ -78,7 +78,7 @@ def build_model(model: gp.Model, graph: nx.Graph):
     )
 
     f = model.addVars(
-        [(i, j) for i, j in graph.edges()] + [(j, i) for i, j in graph.edges()],
+        [(i, j) for i, j in graph.edges] + [(j, i) for i, j in graph.edges],
         vtype=GRB.CONTINUOUS,
         lb=0.0,
         name="f")
