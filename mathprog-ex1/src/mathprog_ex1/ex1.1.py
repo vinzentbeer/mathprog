@@ -65,6 +65,34 @@ def build_model(model: gp.Model, graph: nx.Graph):
     # to save a reference in the model itself
     #
     # model.addConstrs(...)
+
+    x1 = model.addVars( #with addvars we can add the forAll relationship over the edges. don't know if this is quite the right way yet 
+        graph.edges,
+        name="x1",
+        vtype=GRB.BINARY,
+    )
+    x2 = model.addVars(
+        graph.edges,
+        name="x2",
+        vtype=GRB.BINARY,
+    )
+
+    f = model.addVars(
+        graph.edges,
+        name="f",
+        vtype=GRB.CONTINUOUS,
+    )
+
+
+    model.addConstr(x1 + x2 <= 1,  name="c1")
+    model.addConstrs(
+        (f[i, j] <= graph[i][j]["capacity_1"] * x1[i, j] for i, j in graph.edges),
+        name="c2",
+    )
+    model.addConstrs(
+        (f[i, j] <= graph[i][j]["capacity_2"] * x2[i, j] for i, j in graph.edges),
+        name="c3",
+    )
     pass
 
 
