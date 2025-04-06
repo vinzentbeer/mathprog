@@ -66,7 +66,7 @@ def build_model(model: gp.Model, graph: nx.Graph):
     #
     # model.addConstrs(...)
 
-    x1 = model.addVars( #with addvars we can add the forAll relationship over the edges. don't know if this is quite the right way yet 
+    x1 = model.addVars(
         graph.edges,
         name="x1",
         vtype=GRB.BINARY,
@@ -78,23 +78,19 @@ def build_model(model: gp.Model, graph: nx.Graph):
     )
 
     f = model.addVars(
-        graph.edges,
-        name="f",
+        [(i, j) for i, j in graph.edges()] + [(j, i) for i, j in graph.edges()],
         vtype=GRB.CONTINUOUS,
-    )
+        lb=0.0,
+        name="f")
+    
+    model.addConstrs((x1[i,j] + x2[i,j] <= 1 for i,j in graph.edges), name="at most one link variant")
+    model.addConstrs((gp.quicksum(f[i,j] - f[j,i] for j in graph.neighbors(i)) == graph.nodes[i]["supply_demand"] for i in graph.nodes), name="flow conservation")
+    model.addConstrs((f[i,j] + f[j,i] <= graph[i][j]["capacity_1"] * x1[i, j] + graph[i][j]["capacity_2"] * x2[i, j] for i, j in graph.edges), name="flow <= capacity")
 
-
-    #model.addConstr(x1 + x2 <= 1,  name="c1")
-
-    #since we get multiple x vars for all edges, i don't know how to  represent this 
-    model.addConstrs((x1 + x2 <= 1 for i, j in graph.edges), name="at_most_one_link")
-    #    model.addConstrs(((x1 + x2 <= 1 for i, j in graph.edges)for x1,x2 in x1,x2), name="at_most_one_link")
-
-    model.addConstrs(
-        (f[i, j] <= graph[i][j]["capacity_1"] * x1[i, j] + graph[i][j]["capacity_2"] * x2[i, j] for i, j in graph.edges),
-        name="flow_capacity",
-    )
-    model.addConstrs((f[i,j] - f[j,i]  == graph[i]["supply_demand"] for j in nx.all_neighbours(graph,i) for i in graph.nodes), name="flow_conservation")
+    model.setObjective(gp.quicksum(graph[i][j]["transport_cost"] * f[i,j] +
+                                   graph[i][j]["transport_cost"] * f[j,i] +
+                                   graph[i][j]["build_cost_1"] * x1[i,j] +
+                                   graph[i][j]["build_cost_2"] * x2[i,j]  for i, j in graph.edges), GRB.MINIMIZE)
 
    
     pass
