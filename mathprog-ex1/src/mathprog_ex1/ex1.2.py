@@ -66,11 +66,10 @@ def build_model(model: gp.Model, processing_times: np.ndarray, machine_sequences
         t[machine_sequences[j,i+1],j] >= t[machine_sequences[j,i],j] + processing_times[j,machine_sequences[j,i]] for i in range(n_machines-1) for j in range(n_jobs)
     )
 
-    large_const = 1000
-
+    C = 100000
     # only one job at a time
-    model.addConstrs(t[i,j] + processing_times[j,i] <= t[i,k] + large_const * (1 - s[i,j,k]) for i in range(n_machines) for j in range(n_jobs) for k in range(n_jobs) if j != k)
-    model.addConstrs(t[i,j] + processing_times[j,i] <= t[i,k] + large_const * s[i,j,k] for i in range(n_machines) for j in range(n_jobs) for k in range(n_jobs) if j != k)
+    model.addConstrs(t[i,j] + processing_times[j,i] <= t[i,k] + C * (1 - s[i,j,k]) for i in range(n_machines) for j in range(n_jobs) for k in range(n_jobs) if j != k)
+    model.addConstrs(t[i,k] + processing_times[k,i] <= t[i,j] + C * s[i,j,k] for i in range(n_machines) for j in range(n_jobs) for k in range(n_jobs) if j != k)
 
 
     model.setObjective(gp.quicksum(t[machine_sequences[j, n_machines - 1], j] + processing_times[j,machine_sequences[j, n_machines - 1]] for j in range(n_jobs)), GRB.MINIMIZE) 
@@ -78,7 +77,7 @@ def build_model(model: gp.Model, processing_times: np.ndarray, machine_sequences
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--filename", default="instances/ex1.2-instance.dat")
+    parser.add_argument("--filename", default="mathprog-ex1/instances/ex1.2-instance.dat")
     args = parser.parse_args()
 
     processing_times, machine_sequences = read_instance_file(args.filename)
