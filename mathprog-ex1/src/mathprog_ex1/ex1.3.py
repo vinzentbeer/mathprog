@@ -20,30 +20,24 @@ def build_model(model: gp.Model, n: int, k: int):
     d1 = model.addVars(n, n, vtype=GRB.BINARY, name="draw variable 1 ")
     d2 = model.addVars(n, n, vtype=GRB.BINARY, name="draw variable 2 ")
 
-    r = model.addVars(n, vtype=GRB.BINARY, name="relegation variable")
-    
-    kappa = model.addVar(lb=0, vtype=GRB.CONTINUOUS, name="threshold")
+    P = model.addVars(n, vtype=GRB.INTEGER, lb=0, name='points ')
 
     model.addConstrs(w1[i,j] + w1[j,i] + d1[i,j] == 1 for i in range(n) for j in range(n) if i != j)
     model.addConstrs(w2[i,j] + w2[j,i] + d2[i,j] == 1 for i in range(n) for j in range(n) if i != j)
 
-    model.addConstr(r[0] == 0)
+    model.addConstrs(P[i] == gp.quicksum(3*w1[i,j]+3*w2[i,j]+d1[i,j]+d1[i,j] for j in range(n) if i!=j) for i in range(n))
 
-    model.addConstr(gp.quicksum(r) == k)
+    model.addConstrs(P[i] <= P[i+1] for i in range(n-1))
 
-    M = 1000
-    model.addConstrs(gp.quicksum(3*w1[i,j]+3*w2[i,j]+d1[i,j]+d1[i,j] for j in range(n) if i!=j) <= kappa + 1 + M*(1-r[i]) for i in range(n))
-    model.addConstrs(gp.quicksum(3*w1[i,j]+3*w2[i,j]+d1[i,j]+d1[i,j] for j in range(n) if i!=j) >= kappa - M*r[i] for i in range(n))
-
-    model.setObjective(gp.quicksum(3*w1[0,j]+3*w2[0,j]+d1[0,j]+d1[0,j] for j in range(n) if j!=0), GRB.MINIMIZE)
+    model.setObjective(P[k-1] + 1, GRB.MAXIMIZE)
 
     pass
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--n", default=5)
-    parser.add_argument("--k", default=1)
+    parser.add_argument("--n", default=18)
+    parser.add_argument("--k", default=3)
     args = parser.parse_args()
 
     model = gp.Model("ex1.3")
@@ -55,6 +49,7 @@ if __name__ == "__main__":
     if model.SolCount > 0:
         print(f"obj. value = {model.ObjVal}")
         for v in model.getVars():
-            print(f"{v.VarName} = {v.X}")
+            #if v.VarName == 'points':
+                print(f"{v.VarName} = {v.X}")
 
     model.close()
