@@ -49,17 +49,27 @@ def create_model(model: gp.Model):
     # create common variables
     # see, e.g., https://docs.gurobi.com/projects/optimizer/en/current/reference/python/model.html#Model.addVars
 
-    # x = m.addVars(...)
+    # Variables for each node
+    x = model.addVars(model._original_graph.nodes, vtype=GRB.BINARY)
+    # Variables for each edge
+    y = model.addVars(model._original_graph.edges, vtype=GRB.BINARY)
 
 
     # add reference to relevant variables for later use in callbacks (CEC,DCC)
 
-    # m._x = x
-
+    model._x = x
+    model._y = y
 
     # create common constraints
     # see, e.g., https://docs.gurobi.com/projects/optimizer/en/current/reference/python/model.html#Model.addConstr
 
+    model.addConstr(gp.quicksum(x) == model._k)
+    model.addConstr(gp.quicksum(y) == model._k - 1)
+
+    model.addConstrs(y[i,j] <= x[i] for i,j in model._original_graph.edges)
+    model.addConstrs(y[i,j] <= x[j] for i,j in model._original_graph.edges)
+
+    model.setObjective(gp.quicksum(y))
 
     # create model-specific variables and constraints
     if model._formulation == "seq":
@@ -78,4 +88,4 @@ def get_selected_edge_ids(model: gp.Model) -> list[int]:
     # see, e.g., https://docs.gurobi.com/projects/optimizer/en/current/concepts/modeling/tolerances.html
 
     # https://docs.gurobi.com/projects/optimizer/en/current/concepts/attributes/examples.html
-    return []
+    return [model._original_graph.edges[edge]["id"] for edge in model._original_graph.edges if model._y[edge].X == 1]
