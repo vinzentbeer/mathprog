@@ -7,6 +7,7 @@ import sys
 
 from model import create_model, lazy_constraint_callback, get_selected_edge_ids
 from util import read_instance, write_solution
+from visuals import plot_graph
 
 if __name__ == "__main__":
     # parse command line arguments
@@ -104,3 +105,10 @@ if __name__ == "__main__":
         if args.solution_file:
             write_solution(args.solution_file, get_selected_edge_ids(model))
             pass
+
+        # Stuff I added
+        # for v in model.getVars():
+        #     if v.X > 0:
+        #         print(f"{v.VarName} = {v.X}")
+
+        plot_graph(model, G, args)
