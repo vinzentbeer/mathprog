@@ -24,16 +24,17 @@ def build_model(model: gp.Model, n: int, k: int):
     # Point variable
     P = model.addVars(n, vtype=GRB.INTEGER, lb=0, name='points')
 
-    # Only one outcome per match
+    # Exactly one outcome per match
     model.addConstrs(w1[i,j] + w1[j,i] + d1[i,j] == 1 for i in range(n) for j in range(n) if i != j)
     model.addConstrs(w2[i,j] + w2[j,i] + d2[i,j] == 1 for i in range(n) for j in range(n) if i != j)
 
-    # Calculate points
+    # Calculate points for each team
     model.addConstrs(P[i] == gp.quicksum(3*w1[i,j]+3*w2[i,j]+d1[i,j]+d2[i,j] for j in range(n) if i!=j) for i in range(n))
 
-    # Order points inccreasingly
+    # Order points increasingly
     model.addConstrs(P[i] <= P[i+1] for i in range(n-1))
 
+    # Maximize the points of the k-th team
     model.setObjective(P[k-1] + 1, GRB.MAXIMIZE)
 
     pass

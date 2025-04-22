@@ -66,27 +66,27 @@ def build_model(model: gp.Model, graph: nx.Graph):
     #
     # model.addConstrs(...)
 
-    x1 = model.addVars(
-        graph.edges,
-        name="x1",
-        vtype=GRB.BINARY,
-    )
-    x2 = model.addVars(
-        graph.edges,
-        name="x2",
-        vtype=GRB.BINARY,
-    )
+    # Variables for link types
+    x1 = model.addVars(graph.edges, name="x1", vtype=GRB.BINARY)
+    x2 = model.addVars(graph.edges, name="x2", vtype=GRB.BINARY)
 
+    # Flow variable
     f = model.addVars(
         [(i, j) for i, j in graph.edges] + [(j, i) for i, j in graph.edges],
         vtype=GRB.CONTINUOUS,
         lb=0.0,
         name="f")
     
-    model.addConstrs((x1[i,j] + x2[i,j] <= 1 for i,j in graph.edges), name="at most one link variant")
-    model.addConstrs((gp.quicksum(f[i,j] - f[j,i] for j in graph.neighbors(i)) == graph.nodes[i]["supply_demand"] for i in graph.nodes), name="flow conservation")
-    model.addConstrs((f[i,j] + f[j,i] <= graph[i][j]["capacity_1"] * x1[i, j] + graph[i][j]["capacity_2"] * x2[i, j] for i, j in graph.edges), name="flow <= capacity")
+    # At most one link variant per edge
+    model.addConstrs((x1[i,j] + x2[i,j] <= 1 for i,j in graph.edges))
 
+    # The supply/demand is equal to the difference of outgoing to incoming flow
+    model.addConstrs((gp.quicksum(f[i,j] - f[j,i] for j in graph.neighbors(i)) == graph.nodes[i]["supply_demand"] for i in graph.nodes))
+
+    # The flow is limited by capacity of the chosen link
+    model.addConstrs((f[i,j] + f[j,i] <= graph[i][j]["capacity_1"] * x1[i, j] + graph[i][j]["capacity_2"] * x2[i, j] for i, j in graph.edges))
+
+    # Minimize the transport cost and build cost
     model.setObjective(gp.quicksum(graph[i][j]["transport_cost"] * f[i,j] +
                                    graph[i][j]["transport_cost"] * f[j,i] +
                                    graph[i][j]["build_cost_1"] * x1[i,j] +
@@ -98,7 +98,7 @@ def build_model(model: gp.Model, graph: nx.Graph):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--filename", default="instances/ex1.1-instance.dat")
+    parser.add_argument("--filename", default="mathprog-ex1/instances/ex1.1-instance.dat")
     args = parser.parse_args()
 
     graph = read_instance_file(args.filename)
