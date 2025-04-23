@@ -111,8 +111,20 @@ def create_model(model: gp.Model):
 
         pass
     elif model._formulation == "scf":
+
+        
+
+
+
+
+
+
         pass
     elif model._formulation == "mcf":
+
+        
+
+
         pass
     elif model._formulation == "cec":
         pass
