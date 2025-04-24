@@ -102,7 +102,7 @@ def create_model(model: gp.Model):
         model.addConstrs(u[i] <= k * (1 - r[i]) for i in nodes)
         """
 
-        # ExaAt most one incoming edge per node
+        # At most one incoming edge per node
         model.addConstrs(gp.quicksum(y[i,j] for i in nodes if [i,j] in edges or [j,i] in edges) <= x[j] for j in nodes)
 
         # Sequent

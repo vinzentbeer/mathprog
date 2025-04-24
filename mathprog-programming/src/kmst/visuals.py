@@ -1,9 +1,8 @@
 from pyvis.network import Network
-import networkx as nx
 
 from model import get_selected_edge_ids
 
-def plot_graph(model, G, args):
+def plot_graph(model, G):
     # Build MST subgraph
     selected_edges = set(get_selected_edge_ids(model))
     selected_edge_tuples = [e for e in G.edges if G.edges[e]["id"] in selected_edges]

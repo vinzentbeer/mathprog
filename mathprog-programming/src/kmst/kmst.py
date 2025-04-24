@@ -111,4 +111,4 @@ if __name__ == "__main__":
         #     if v.X > 0:
         #         print(f"{v.VarName} = {v.X}")
 
-        plot_graph(model, G, args)
+        plot_graph(model, G)
