@@ -134,8 +134,36 @@ def create_model(model: gp.Model):
 
     elif model._formulation == "mcf":
 
-        
+        dir_edges_with_0 = dir_edges + [(0, j) for j in nodes]
+        nodes_with_0 = [0] + [n for n in nodes]
+        #dir_edges_without_k = dir_edges - dir_edges[k] falsch
+        commodity_vars = [(i,j,c) for i,j in dir_edges_with_0 for c in range(k+1)]
 
+        # Flow variable
+        f = model.addVars(commodity_vars, lb=0, vtype=GRB.BINARY, name='Flow ')
+
+        # Artificial root node (serves as a 'selector')
+        r = model.addVars(nodes, vtype=GRB.BINARY, name='Root ')
+
+        # One edge from root node to any other node (The node to which it points is the real root node) (all hail the real root node)
+        model.addConstr(gp.quicksum(r) == 1)
+        model.addConstrs(r[i] <= x[i] for i in nodes)
+
+        # Flow constraints
+        model.addConstrs(gp.quicksum(f[0,j,c] for j in nodes) == r[c] for c in nodes)
+
+        def get_edges_without_k(): #die constraint drunter will alle j außer k, aber ist k überhaupt eine node? hö
+            pass
+            
+
+        #sum over all fijk - fjik = 0 da steht noch j != k daneben 
+        model.addConstrs(gp.quicksum(f[i,j,c]for i, j in dir_edges_with_0 for c in range(k - 1) )- gp.quicksum(f[j,i,c] for i,j in  dir_edges_with_0 for c in range(k-1)))        
+        model.addConstrs(gp.quicksum(f[i,j,c] for i,l in dir_edges_with_0 if l==j) - #formulation with l as placeholder that selects all edges that lead to j
+                         gp.quicksum(f[j,i,c] for i,l in dir_edges_with_0 if l==j) == 0 for j in nodes for c in nodes if j!=c)
+        
+        #edge must be included to have flow on it
+        #model.addConstrs(f[i,j,c] for i,j in dir_edges_with_0 for c in range(k-1) <= x[i,j] for i,j in dir_edges_without_k)
+        model.addConstrs(f[i,j,c] <= y[i,j] for (i,j) in dir_edges_with_0 for c in nodes)
 
         pass
     elif model._formulation == "cec":
