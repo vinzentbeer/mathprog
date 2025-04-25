@@ -107,8 +107,8 @@ if __name__ == "__main__":
             pass
 
         # Stuff I added
-        # for v in model.getVars():
-        #     if v.X > 0:
-        #         print(f"{v.VarName} = {v.X}")
+        for v in model.getVars():
+            if v.X > 0:
+                print(f"{v.VarName} = {v.X}")
 
         plot_graph(model, G)

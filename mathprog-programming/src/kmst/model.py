@@ -79,6 +79,9 @@ def create_model(model: gp.Model):
     # Only one directional edge
     model.addConstrs(y[i,j] + y[j,i] <= 1 for i,j in edges)
 
+    # At most one incoming edge per node
+    model.addConstrs(gp.quicksum(y[i,j] for i in nodes if [i,j] in dir_edges) <= x[j] for j in nodes)
+
     # Minimize edge weights
     model.setObjective(gp.quicksum((y[i,j] + y[j,i]) * edges[i,j]['cost'] for i,j in edges))
 
@@ -102,9 +105,6 @@ def create_model(model: gp.Model):
         model.addConstrs(u[i] <= k * (1 - r[i]) for i in nodes)
         """
 
-        # At most one incoming edge per node
-        model.addConstrs(gp.quicksum(y[i,j] for i in nodes if [i,j] in edges or [j,i] in edges) <= x[j] for j in nodes)
-
         # Sequent
         model.addConstrs(u[i] + 1 <= u[j] + k * (1 - y[i,j]) for i,j in dir_edges)
         
@@ -112,14 +112,26 @@ def create_model(model: gp.Model):
         pass
     elif model._formulation == "scf":
 
-        
+        dir_edges_with_0 = dir_edges + [(0, j) for j in nodes]
 
+        # Flow variable
+        f = model.addVars(dir_edges_with_0, lb=0, vtype=GRB.CONTINUOUS, name='Flow ')
 
+        # Artificial root node (serves as a 'selector')
+        r = model.addVars(nodes, vtype=GRB.BINARY, name='Root ')
 
+        # One edge from root node to any other node (The node to which it points is the real root node)
+        model.addConstr(gp.quicksum(r) == 1)
+        model.addConstrs(r[i] <= x[i] for i in nodes)
 
-
+        # Flow constraints
+        model.addConstrs(f[0,j] == k * r[j] for j in nodes)
+        model.addConstrs(gp.quicksum(f[i,j] for i, l in dir_edges_with_0 if l==j) -
+                         gp.quicksum(f[j,l] for i, l in dir_edges_with_0 if i==j) == x[j] for j in nodes)
+        model.addConstrs(f[i,j] <= k * y[i,j] for i,j in dir_edges)
 
         pass
+
     elif model._formulation == "mcf":
 
         
