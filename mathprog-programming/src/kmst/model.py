@@ -80,7 +80,7 @@ def create_model(model: gp.Model):
     model.addConstrs(y[i,j] + y[j,i] <= 1 for i,j in edges)
 
     # At most one incoming edge per node
-    model.addConstrs(gp.quicksum(y[i,j] for i in nodes if [i,j] in edges or [j,i] in edges) <= x[j] for j in nodes)
+    model.addConstrs(gp.quicksum(y[i,j] for i in nodes if (i,j) in dir_edges) <= x[j] for j in nodes)
 
     # Minimize edge weights
     model.setObjective(gp.quicksum((y[i,j] + y[j,i]) * edges[i,j]['cost'] for i,j in edges))
