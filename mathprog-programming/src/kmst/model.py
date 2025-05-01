@@ -158,6 +158,12 @@ def create_model(model: gp.Model):
         pass
 
     elif model._formulation == "cec":
+
+        cycles = nx.simple_cycles(model._original_graph)
+        
+        for c in cycles:
+            model.addConstr(gp.quicksum(y[i,j] + y[j,i] for (i,j) in zip(c, c[1:] + [c[0]])) <= len(c) - 1)
+
         pass
     elif model._formulation == "dcc":
         pass
