@@ -11,7 +11,7 @@ def lazy_constraint_callback(model: gp.Model, where):
         # get solution values for variables x
         # see https://docs.gurobi.com/projects/optimizer/en/current/reference/python/model.html#Model.cbGetSolution
 
-        # x_values = model.cbGetSolution(model._x)
+        model._y_values = model.cbGetSolution(model._y)
 
         if model._formulation == "cec":
             add_violated_cec(model)
@@ -23,7 +23,7 @@ def lazy_constraint_callback(model: gp.Model, where):
         # get solution values for variables x
         # see https://docs.gurobi.com/projects/optimizer/en/current/reference/python/model.html#Model.cbGetNodeRel
         
-        # x_values = model.cbGetNodeRel(model._x)
+        model._y_values = model.cbGetNodeRel(model._y)
 
         # you may also use different algorithms for integer and fractional separation if you want
         if model._formulation == "cec":
@@ -33,7 +33,21 @@ def lazy_constraint_callback(model: gp.Model, where):
 
 
 def add_violated_cec(model: gp.Model):
-    # add your CEC separation code here
+    # Build a graph
+    G = nx.Graph()
+    for (i,j), val in model._y_values.items():
+        if val > 1e-5:
+            G.add_edge(i, j, weight=val)
+
+    # Detect cycles
+    try:
+        cycle_edges = nx.find_cycle(G)
+    except nx.NetworkXNoCycle:
+        return
+
+    # Add lazy constraint to eliminate this cycle
+    model.cbLazy(gp.quicksum(model._y[i,j] + model._y[j,i] for i,j in cycle_edges) <= len(cycle_edges) - 1)
+
     pass
 
 
@@ -160,7 +174,7 @@ def create_model(model: gp.Model):
     elif model._formulation == "cec":
 
         cycles = nx.simple_cycles(model._original_graph)
-        
+
         for c in cycles:
             model.addConstr(gp.quicksum(y[i,j] + y[j,i] for (i,j) in zip(c, c[1:] + [c[0]])) <= len(c) - 1)
 

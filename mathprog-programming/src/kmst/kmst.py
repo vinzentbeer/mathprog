@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
         # print statistics
         results = {
-            "instance": args.instance,
+            "instance": args.instance[-7:],
             "k": args.k,
             "formulation": args.formulation,
             "status": model.Status,
@@ -106,9 +106,9 @@ if __name__ == "__main__":
             write_solution(args.solution_file, get_selected_edge_ids(model))
             pass
 
-        # Stuff I added
-        for v in model.getVars():
-            if v.X > 0:
-                print(f"{v.VarName} = {v.X}")
+        # # Stuff I added
+        # for v in model.getVars():
+        #     if v.X > 0:
+        #         print(f"{v.VarName} = {v.X}")
         
-        plot_graph(model, G)
+        #plot_graph(model, G)
