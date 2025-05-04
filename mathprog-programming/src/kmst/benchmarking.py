@@ -22,7 +22,8 @@ except ImportError:
 DATA_DIR_DEFAULT = "./data"
 OUTPUT_CSV_DEFAULT = "benchmark_results.csv"
 # List of formulation identifiers expected by kmst.py
-FORMULATIONS = ["seq", "scf", "mcf", "cec", "dcc"]
+#FORMULATIONS = ["seq", "scf", "mcf", "cec", "dcc"]
+FORMULATIONS = ["seq", "scf"]# lets just use a subset for now
 # Benchmark parameters from PDF
 THREADS = 1
 TIMELIMIT = 3600 # seconds (1 hour)
@@ -61,7 +62,7 @@ def run_single_experiment(instance_path, k_value, formulation, temp_result_path)
     # Construct the command to execute kmst.py
     command = [
         sys.executable,        # Use the same python interpreter running this script
-        "kmst.py",             # The script to run
+        "./src/kmst/kmst.py",             # The script to run
         "--instance", str(instance_path),
         "--k", str(k_value),
         "--formulation", formulation,

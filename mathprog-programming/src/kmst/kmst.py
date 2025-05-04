@@ -97,6 +97,19 @@ if __name__ == "__main__":
             "runtime": round(model.runtime, 3),
             "n_nodes": round(model.NodeCount)
         }
+
+
+        # Add lazy constraint count to results if applicable
+        lazy_count = 0
+        if args.formulation in {"cec", "dcc"} and hasattr(model, '_lazy_constrs_added'):
+            lazy_count = model._lazy_constrs_added
+
+        results["n_lazy_constraints"] = lazy_count # Add the count
+
+
+
+
+        
         print(results)
         if args.results_file:
             with open(args.results_file, "w", encoding="utf-8") as f:

@@ -5,7 +5,7 @@ import networkx as nx
 def lazy_constraint_callback(model: gp.Model, where):
     # note: you'll need to account for tolerances!
     # see, e.g., https://docs.gurobi.com/projects/optimizer/en/current/concepts/modeling/tolerances.html
-
+    model._lazy_constrs_added += 1 #should really add this only when succressful
     # check integer solutions for feasibility
     if where == GRB.Callback.MIPSOL:
         # get solution values for variables x
@@ -58,11 +58,13 @@ def add_violated_dcc(model: gp.Model):
 
 def create_model(model: gp.Model):
     # see, e.g., https://docs.gurobi.com/projects/optimizer/en/current/reference/python.html
+    
+    model._lazy_constrs_added = 0
 
     nodes: nx.Graph.nodes = model._original_graph.nodes
     edges: nx.Graph.edges = model._original_graph.edges
     k = model._k
-
+    
     dir_edges = [(i,j) for i,j in edges] + [(j,i) for i,j in edges]
 
     # create common variables
