@@ -10,7 +10,7 @@ import sys
 import time
 from pathlib import Path
 
-# Ensure util.py is accessible (e.g., in the same directory or Python path)
+# Debug util accessibility .......
 try:
     from util import read_instance
 except ImportError:
@@ -24,7 +24,7 @@ OUTPUT_CSV_DEFAULT = "benchmark_results.csv"
 # List of formulation identifiers expected by kmst.py
 #FORMULATIONS = ["seq", "scf", "mcf", "cec", "dcc"]
 FORMULATIONS = ["seq", "scf"]# lets just use a subset for now
-# Benchmark parameters from PDF
+#benchmark params
 THREADS = 1
 TIMELIMIT = 3600 # seconds (1 hour)
 MEMORYLIMIT = 8  # GB
