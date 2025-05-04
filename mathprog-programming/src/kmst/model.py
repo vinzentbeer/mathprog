@@ -16,6 +16,8 @@ def lazy_constraint_callback(model: gp.Model, where):
         if model._formulation == "cec":
             add_violated_cec(model)
         elif model._formulation == "dcc":
+            model._x_values = model.cbGetSolution(model._x)
+            model._r_value = model.cbGetSolution(model._r)
             add_violated_dcc(model)
 
     # check fractional solutions to find violated CECs/DCCs to strengthen the bound
@@ -29,6 +31,8 @@ def lazy_constraint_callback(model: gp.Model, where):
         if model._formulation == "cec":
             add_violated_cec(model)
         elif model._formulation == "dcc":
+            model._x_values = model.cbGetNodeRel(model._x)
+            model._r_value = model.cbGetNodeRel(model._r)
             add_violated_dcc(model)
 
 
@@ -53,6 +57,40 @@ def add_violated_cec(model: gp.Model):
 
 def add_violated_dcc(model: gp.Model):
     # add your DCC separation code here
+    
+    # Build graph
+    G = nx.DiGraph()
+    for (i, j), val in model._y_values.items():
+        if val > 1e-5:
+            G.add_edge(i, j, capacity=val)
+
+    roots = [key for key, val in model._r_value.items() if val > 1e-5]
+    if len(roots) != 1:
+        return  # Either no root or more than one selected — skip
+    root = roots[0]
+
+    if root not in G.nodes:
+        return
+
+    selected_nodes = [node for node,val in model._x_values.items() if val > 1e-5]
+
+    for t in selected_nodes:
+        if t == root:
+            continue
+
+        if t not in G.nodes:
+            continue
+            
+        try:
+            cut_val, (A, B) = nx.minimum_cut(G, root, t)
+        except nx.NetworkXError:
+            return    # Skip node if node is not reachable
+
+        if cut_val + 1e-5 < model._x_values[t]:
+            cut_edges = [(u, v) for u in A for v in B if (u, v) in model._y]
+            model.cbLazy(gp.quicksum(model._y[u, v] for (u, v) in cut_edges) >= model._x_values[t])
+
+        
     pass
 
 
@@ -173,13 +211,23 @@ def create_model(model: gp.Model):
 
     elif model._formulation == "cec":
 
-        cycles = nx.simple_cycles(model._original_graph)
+        # cycles = nx.simple_cycles(model._original_graph)
 
-        for c in cycles:
-            model.addConstr(gp.quicksum(y[i,j] + y[j,i] for (i,j) in zip(c, c[1:] + [c[0]])) <= len(c) - 1)
+        # for c in cycles:
+        #     model.addConstr(gp.quicksum(y[i,j] + y[j,i] for (i,j) in zip(c, c[1:] + [c[0]])) <= len(c) - 1)
 
         pass
     elif model._formulation == "dcc":
+
+        # Root node definition
+        r = model.addVars(nodes, vtype=GRB.BINARY, name='Root ')
+        model.addConstr(gp.quicksum(r) == 1)
+        model.addConstrs(r[i] <= x[i] for i in nodes)
+        model._r = r
+
+        # If a node is selected and not the root node, then at least one node is incoming
+        model.addConstrs(x[j] - r[j] <= gp.quicksum(y[i,j] for i,l in dir_edges if l==j) for j in nodes)
+
         pass
 
 def get_selected_edge_ids(model: gp.Model) -> list[int]:
