@@ -19,7 +19,7 @@ except ImportError:
     sys.exit(1)
 
 # --- Configuration ---
-DATA_DIR_DEFAULT = "./mathprog-programming/data"
+DATA_DIR_DEFAULT = "mathprog-programming/data"
 OUTPUT_CSV_DEFAULT = "benchmark_results.csv"
 # List of formulation identifiers expected by kmst.py
 #FORMULATIONS = ["seq", "scf", "mcf", "cec", "dcc"]
@@ -62,7 +62,7 @@ def run_single_experiment(instance_path, k_value, formulation, temp_result_path)
     # Construct the command to execute kmst.py
     command = [
         sys.executable,        # Use the same python interpreter running this script
-        "./src/kmst/kmst.py",             # The script to run
+        "mathprog-programming/src/kmst/kmst.py",             # The script to run
         "--instance", str(instance_path),
         "--k", str(k_value),
         "--formulation", formulation,
