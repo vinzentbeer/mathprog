@@ -19,7 +19,7 @@ except ImportError:
     sys.exit(1)
 
 # --- Configuration ---
-DATA_DIR_DEFAULT = "./data"
+DATA_DIR_DEFAULT = "./mathprog-programming/data"
 OUTPUT_CSV_DEFAULT = "benchmark_results.csv"
 # List of formulation identifiers expected by kmst.py
 #FORMULATIONS = ["seq", "scf", "mcf", "cec", "dcc"]
@@ -217,8 +217,7 @@ def main():
 
     print(f"\nWriting {len(all_results)} results to {output_csv_path}...")
 
-    # Define CSV headers based on PDF requirements and expected keys from kmst.py's JSON output
-    # Order matters for the CSV file.
+    
     headers = [
         "instance",             # Instance name stem (e.g., g01)
         "k",                    # Value of k used
@@ -229,7 +228,7 @@ def main():
         "gap",                  # MIPGap reported by Gurobi
         "runtime",              # Runtime reported by Gurobi
         "n_nodes",              # Branch-and-bound nodes explored
-        "n_lazy_constraints"    # Number of added constraints (for CEC/DCC, requires kmst.py mod)
+        "n_lazy_constraints"    # Number of added constraints (for CEC/DCC, we should count this in kmst.py)
         # Add any other desired fields from results if needed
     ]
 
