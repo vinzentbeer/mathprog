@@ -22,8 +22,7 @@ except ImportError:
 DATA_DIR_DEFAULT = "mathprog-programming/data"
 OUTPUT_CSV_DEFAULT = "benchmark_results.csv"
 # List of formulation identifiers expected by kmst.py
-#FORMULATIONS = ["seq", "scf", "mcf", "cec", "dcc"]
-FORMULATIONS = ["seq", "scf"]# lets just use a subset for now
+FORMULATIONS = ["seq", "scf", "mcf", "cec", "dcc"]
 #benchmark params
 THREADS = 1
 TIMELIMIT = 3600 # seconds (1 hour)
