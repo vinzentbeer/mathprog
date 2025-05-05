@@ -36,9 +36,9 @@ def calculate_k_values(num_nodes):
     if num_nodes <= 0:
         # Handle cases like empty graph if necessary, though unlikely for these instances
         return set()
-    # k = floor(|V|/2)
-    k1 = math.floor(num_nodes / 5)
-    # k = ceil(2*|V|/3)
+    # k = ceil(|V|/5)
+    k1 = math.ceil(num_nodes / 5)
+    # k = ceil(|V|/2)
     k2 = math.ceil(num_nodes / 2)
     # Ensure k is within the valid range {0, ..., |V|} and store unique values
     k_values = {max(0, min(num_nodes, k)) for k in [k1, k2]}
