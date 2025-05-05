@@ -84,6 +84,7 @@ if __name__ == "__main__":
             print(f"{nx.number_connected_components(k_mst)=}")
         else:
             print("k-MST is valid")
+            is_valid = True
             
 
         # print statistics
@@ -96,7 +97,8 @@ if __name__ == "__main__":
             "best_bound": model.ObjBound,
             "gap": round(model.MIPGap, 4),
             "runtime": round(model.runtime, 3),
-            "n_nodes": round(model.NodeCount)
+            "n_nodes": round(model.NodeCount),
+            "is_valid_k_mst": is_valid
         }
 
 

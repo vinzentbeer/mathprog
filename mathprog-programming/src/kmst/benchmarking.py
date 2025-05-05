@@ -71,6 +71,7 @@ def run_single_experiment(instance_path, k_value, formulation, temp_result_path)
         "--memorylimit", str(MEMORYLIMIT),
         "--results-file", str(temp_result_path)
         # We don't need --solution-file for benchmarking runs
+        
     ]
 
     print(f"  Executing: {' '.join(command)}")
@@ -94,6 +95,7 @@ def run_single_experiment(instance_path, k_value, formulation, temp_result_path)
                     # **IMPORTANT**: Assumes kmst.py adds 'n_lazy_constraints'
                     # Provide a default if it's missing (e.g., for non-CEC/DCC)
                     run_data.setdefault('n_lazy_constraints', 0)
+                    run_data.setdefault('is_valid_k_mst', False) #default to false !
                     run_successful = True
                 except json.JSONDecodeError:
                     print(f"  ERROR: Failed to decode JSON from temp file: {temp_result_path}")
@@ -222,14 +224,14 @@ def main():
         "instance",             # Instance name stem (e.g., g01)
         "k",                    # Value of k used
         "formulation",          # Formulation identifier (seq, scf, etc.)
-        "status",               # Gurobi status code (e.g., 2=Optimal, 9=TimeLimit)
+        "status",               # Gurobi status code 
         "objective_value",      # Best objective value found
         "best_bound",           # Best objective bound (for MIPs)
         "gap",                  # MIPGap reported by Gurobi
         "runtime",              # Runtime reported by Gurobi
         "n_nodes",              # Branch-and-bound nodes explored
-        "n_lazy_constraints"    # Number of added constraints (for CEC/DCC, we should count this in kmst.py)
-        # Add any other desired fields from results if needed
+        "n_lazy_constraints" ,   # Number of added constraints (for CEC/DCC, we should count this in kmst.py)
+        "is_valid_k_mst" 
     ]
 
     try:
