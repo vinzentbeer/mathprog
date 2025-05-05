@@ -29,12 +29,12 @@ THREADS = 1
 TIMELIMIT = 3600 # seconds (1 hour)
 MEMORYLIMIT = 8  # GB
 # Temporary file for passing results from subprocess
-TEMP_RESULT_FILENAME = "_temp_bench_result.json"
+#TEMP_RESULT_FILENAME = "_temp_bench_result.json"
 
 def calculate_k_values(num_nodes):
     """Calculates the required k values based on the number of nodes (|V|)."""
     if num_nodes <= 0:
-        # Handle cases like empty graph if necessary, though unlikely for these instances
+        # Handle cases like empty grapsh if necessary, though unlikely for these instances
         return set()
     # k = ceil(|V|/5)
     k1 = math.ceil(num_nodes / 5)
@@ -146,7 +146,7 @@ def main():
     data_path = Path(args.data_dir)
     output_csv_path = Path(args.output_csv)
     # Use a temporary file in the current directory for simplicity
-    temp_result_path = Path(TEMP_RESULT_FILENAME).resolve()
+    #temp_result_path = Path(TEMP_RESULT_FILENAME).resolve()
     formulations_to_run = args.formulations
 
     # --- Input Validation ---
@@ -189,7 +189,7 @@ def main():
                 # Loop through specified formulations
                 for formulation in formulations_to_run:
                     print(f"  Testing formulation = {formulation}")
-
+                    temp_result_path = Path(f"temp_result_{formulation}.json").resolve()
                     # Run the single experiment via subprocess
                     result_data = run_single_experiment(instance_path, k, formulation, temp_result_path)
 

@@ -73,6 +73,7 @@ if __name__ == "__main__":
 
 
         # check solution feasibility
+        is_valid = False
         selected_edges = set(get_selected_edge_ids(model))
         k_mst = G.edge_subgraph(edge for edge in G.edges if G.edges[edge]["id"] in selected_edges)
         if not nx.is_tree(k_mst):
