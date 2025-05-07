@@ -56,8 +56,6 @@ def add_violated_cec(model: gp.Model):
 
 
 def add_violated_dcc(model: gp.Model):
-    # add your DCC separation code here
-    
     # Build graph
     G = nx.DiGraph()
     for (i, j), val in model._y_values.items():
@@ -77,20 +75,13 @@ def add_violated_dcc(model: gp.Model):
     for t in selected_nodes:
         if t == root:
             continue
-
-        if t not in G.nodes:
-            continue
             
-        try:
-            cut_val, (A, B) = nx.minimum_cut(G, root, t)
-        except nx.NetworkXError:
-            return    # Skip node if node is not reachable
+        cut_val, (A, B) = nx.minimum_cut(G, root, t)
 
         if cut_val + 1e-5 < model._x_values[t]:
             cut_edges = [(u, v) for u in A for v in B if (u, v) in model._y]
             model.cbLazy(gp.quicksum(model._y[u, v] for (u, v) in cut_edges) >= model._x_values[t])
-
-        
+            return
     pass
 
 
