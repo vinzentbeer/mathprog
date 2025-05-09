@@ -14,7 +14,7 @@ from pathlib import Path
 from util import read_instance
 
 
-# --- Configuration ---
+
 DATA_DIR_DEFAULT = "mathprog-programming/data"
 OUTPUT_CSV_DEFAULT = "benchmark_results.csv"
 # List of formulation identifiers expected by kmst.py
@@ -69,16 +69,16 @@ def run_single_experiment(instance_path, k_value, formulation, temp_result_path)
         end_time = time.time()
         print(f"  Run finished in {end_time - start_time:.2f}s. Exit code: {result.returncode}")
 
-        # Check if the subprocess indicated success (exit code 0)
+        #subprocess indicated success (exit code 0)
         if result.returncode == 0:
-            # Check if the temporary result file was created by kmst.py
+            
             if temp_result_path.exists():
                 try:
                     with open(temp_result_path, 'r', encoding='utf-8') as f:
                         run_data = json.load(f)
-                    # **IMPORTANT**: Assumes kmst.py adds 'n_lazy_constraints'
-                    # Provide a default if it's missing (e.g., for non-CEC/DCC)
-                    run_data.setdefault('n_lazy_constraints', 0)
+                    
+                    
+                    run_data.setdefault('n_lazy_constraints', 0)#Assumes kmst.py adds 'n_lazy_constraints'
                     run_data.setdefault('is_valid_k_mst', False) #default to false !
                     run_successful = True
                 except json.JSONDecodeError:
@@ -191,12 +191,12 @@ def main():
         except FileNotFoundError:
              print(f"  ERROR: Instance file not found during read: {instance_path}. Skipping.")
         except Exception as e:
-            # Catch other errors during instance processing (e.g., reading graph)
+            #other errors during instance processing (e.g., reading graph)
             print(f"  ERROR: Failed to process instance {instance_path.name}: {e}")
-            # Decide whether to continue with the next instance or stop
+            # could also stop here
             continue
 
-    # --- Write Consolidated Results to CSV ---
+   
     if not all_results:
         print("\nNo successful results were collected. CSV file will not be created.")
         return
@@ -219,10 +219,8 @@ def main():
     ]
 
     try:
-        with open(output_csv_path, 'w', newline='', encoding='utf-8') as csvfile:
-            # Use DictWriter for easy mapping from results dictionary to CSV columns
-            # extrasaction='ignore' prevents errors if the JSON has extra unexpected fields
-            writer = csv.DictWriter(csvfile, fieldnames=headers, extrasaction='ignore')
+        with open(output_csv_path, 'w', newline='', encoding='utf-8') as csvfile:            
+            writer = csv.DictWriter(csvfile, fieldnames=headers, extrasaction='ignore')# extrasaction='ignore' prevents errors if the JSON has extra unexpected fields
             writer.writeheader() # Write the header row
             writer.writerows(all_results) # Write all collected results
         print("BENCHMARKING COMPLETE! 🥳🥳🥳")
