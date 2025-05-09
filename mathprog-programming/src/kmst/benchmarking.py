@@ -10,13 +10,9 @@ import sys
 import time
 from pathlib import Path
 
-# Debug util accessibility .......
-try:
-    from util import read_instance
-except ImportError:
-    print("Error: Could not import 'read_instance' from 'util'. "
-          "Make sure util.py is in the same directory or your PYTHONPATH.")
-    sys.exit(1)
+
+from util import read_instance
+
 
 # --- Configuration ---
 DATA_DIR_DEFAULT = "mathprog-programming/data"
@@ -46,19 +42,8 @@ def calculate_k_values(num_nodes):
     return k_values
 
 def run_single_experiment(instance_path, k_value, formulation, temp_result_path):
-    """
-    Runs kmst.py for a single configuration using subprocess and captures results.
-
-    Args:
-        instance_path (Path): Path to the instance .dat file.
-        k_value (int): The value of k for the k-MST problem.
-        formulation (str): The formulation type ('seq', 'scf', etc.).
-        temp_result_path (Path): Path to use for the temporary results JSON file.
-
-    Returns:
-        dict: A dictionary containing the results from kmst.py, or None if the run failed.
-    """
-    # Construct the command to execute kmst.py
+   
+   
     command = [
         sys.executable,        # Use the same python interpreter running this script
         "mathprog-programming/src/kmst/kmst.py",             # The script to run
@@ -103,19 +88,19 @@ def run_single_experiment(instance_path, k_value, formulation, temp_result_path)
             else:
                 print(f"  ERROR: Subprocess exited successfully, but temp result file "
                       f"'{temp_result_path}' was not found.")
-                print("----- STDOUT -----")
+                print("stdout:")
                 print(result.stdout)
-                print("----- STDERR -----")
+                print("  STDERR  ")
                 print(result.stderr)
-                print("------------------")
+                print("   ---")
         else:
             # Subprocess failed, print details for debugging
             print(f"  ERROR: kmst.py failed for {instance_path.name} k={k_value} form={formulation}")
-            print("----- STDOUT -----")
+            print("  STDOUT  ")
             print(result.stdout)
-            print("----- STDERR -----")
+            print("  STDERR  ")
             print(result.stderr)
-            print("------------------")
+            print("   ---")
 
     except Exception as e:
         # Catch errors during subprocess execution itself
@@ -240,7 +225,7 @@ def main():
             writer = csv.DictWriter(csvfile, fieldnames=headers, extrasaction='ignore')
             writer.writeheader() # Write the header row
             writer.writerows(all_results) # Write all collected results
-        print("Benchmarking complete. Results saved.")
+        print("BENCHMARKING COMPLETE! 🥳🥳🥳")
     except IOError as e:
         print(f"Error: Could not write results to CSV file {output_csv_path}: {e}")
     except Exception as e:
