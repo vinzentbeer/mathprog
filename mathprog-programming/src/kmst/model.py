@@ -72,16 +72,17 @@ def add_violated_dcc(model: gp.Model):
 
     selected_nodes = [node for node,val in model._x_values.items() if val > 1e-5]
 
+    if len(selected_nodes) != model._k:
+        return
+    
     for t in selected_nodes:
         if t == root:
             continue
             
         cut_val, (A, B) = nx.minimum_cut(G, root, t)
-
         if cut_val + 1e-5 < model._x_values[t]:
             cut_edges = [(u, v) for u in A for v in B if (u, v) in model._y]
             model.cbLazy(gp.quicksum(model._y[u, v] for (u, v) in cut_edges) >= model._x_values[t])
-            return
     pass
 
 
