@@ -5,7 +5,6 @@ import networkx as nx
 def lazy_constraint_callback(model: gp.Model, where):
     # note: you'll need to account for tolerances!
     # see, e.g., https://docs.gurobi.com/projects/optimizer/en/current/concepts/modeling/tolerances.html
-    model._lazy_constrs_added += 1 #should really add this only when succressful
     # check integer solutions for feasibility
     if where == GRB.Callback.MIPSOL:
         # get solution values for variables x
@@ -51,33 +50,31 @@ def add_violated_cec(model: gp.Model):
 
     # Add lazy constraint to eliminate this cycle
     model.cbLazy(gp.quicksum(model._y[i,j] + model._y[j,i] for i,j in cycle_edges) <= len(cycle_edges) - 1)
-
+    model._lazy_constrs_added += 1
     pass
 
 
 def add_violated_dcc(model: gp.Model):
-    # Build graph
+    # Build the original graph with weighted edges
     G = nx.DiGraph()
     for (i, j), val in model._y_values.items():
         G.add_edge(i, j, capacity=val)
-            
+    
+    # Add the source node to the graph
     G.add_node(0)
-    root = max(model._r_value, key=model._r_value.get)
-    # root_val = max(model._r_value.values())
-    # G.add_edge(0, root, capacity=root_val)
-    # print(root, root_val)
     for i, val in model._r_value.items():
         G.add_edge(0, i, capacity=val)
 
+    # Cutset algorithm
     for t in G:
-        if t==0 or t==root:
+        if t==0:
             continue
-
         cut_val, (A, B) = nx.minimum_cut(G, 0, t)
         if cut_val + 1e-5 < model._x_values[t]:
             cut_edges = [(u,v) for (u,v) in model._y_values if u in A and v in B]
             model.cbLazy(gp.quicksum(model._y[u,v] for (u,v) in cut_edges) >= model._x[t])
-            return
+            model._lazy_constrs_added += 1  
+            return # Only one constraint is added per solution
     pass
 
 
@@ -200,12 +197,8 @@ def create_model(model: gp.Model):
 
     elif model._formulation == "cec":
 
-        # cycles = nx.simple_cycles(model._original_graph)
-
-        # for c in cycles:
-        #     model.addConstr(gp.quicksum(y[i,j] + y[j,i] for (i,j) in zip(c, c[1:] + [c[0]])) <= len(c) - 1)
-
         pass
+
     elif model._formulation == "dcc":
 
         # Root node definition
@@ -214,7 +207,7 @@ def create_model(model: gp.Model):
         model.addConstrs(r[i] <= x[i] for i in nodes)
         model._r = r
 
-        # If a node is selected and not the root node, then at least one node is incoming
+        # If a node is selected and not the root node, then at least one node is incoming (necessary for optimality)
         model.addConstrs(x[j] - r[j] <= gp.quicksum(y[i,j] for i,l in dir_edges if l==j) for j in nodes)
 
         pass
