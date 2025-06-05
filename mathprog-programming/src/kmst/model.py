@@ -13,7 +13,7 @@ def lazy_constraint_callback(model: gp.Model, where):
         model._y_values = model.cbGetSolution(model._y)
 
         if model._formulation == "cec":
-            add_violated_cec(model)
+            add_violated_cec_int(model)
         elif model._formulation == "dcc":
             model._x_values = model.cbGetSolution(model._x)
             model._r_value = model.cbGetSolution(model._r)
@@ -25,17 +25,17 @@ def lazy_constraint_callback(model: gp.Model, where):
         # see https://docs.gurobi.com/projects/optimizer/en/current/reference/python/model.html#Model.cbGetNodeRel
         
         model._y_values = model.cbGetNodeRel(model._y)
+        model._x_values = model.cbGetNodeRel(model._x)
 
         # you may also use different algorithms for integer and fractional separation if you want
         if model._formulation == "cec":
-            add_violated_cec(model)
+            add_violated_cec_frac(model)
         elif model._formulation == "dcc":
-            model._x_values = model.cbGetNodeRel(model._x)
             model._r_value = model.cbGetNodeRel(model._r)
             add_violated_dcc(model)
 
 
-def add_violated_cec(model: gp.Model):
+def add_violated_cec_int(model: gp.Model):
     # Build a graph
     G = nx.Graph()
     for (i,j), val in model._y_values.items():
@@ -51,6 +51,25 @@ def add_violated_cec(model: gp.Model):
     # Add lazy constraint to eliminate this cycle
     model.cbLazy(gp.quicksum(model._y[i,j] + model._y[j,i] for i,j in cycle_edges) <= len(cycle_edges) - 1)
     model._lazy_constrs_added += 1
+    pass
+
+def add_violated_cec_frac(model: gp.Model):
+    tol = 1e-5
+    # Build directed graph with inverted weights
+    G = nx.DiGraph()
+    for (i,j),val in model._y_values.items():
+        G.add_edge(i, j, weight=max(0, 1-val))
+
+    # Iterate over all arcs
+    for i, j, weight in G.edges(data='weight'):
+        if not (model._x_values[i] > tol and model._x_values[j] > tol):
+            continue
+        
+        cost, path = nx.single_source_dijkstra(G, j, i)
+        if weight + cost < 1 - tol:
+            cycle = [(i,j)] + [(path[i], path[i+1]) for i in range(len(path) - 1)]
+            model.cbLazy(gp.quicksum(model._y[i,j] for i,j in cycle) <= len(cycle) - 1)
+            model._lazy_constrs_added += 1
     pass
 
 
