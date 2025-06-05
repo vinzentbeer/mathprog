@@ -59,21 +59,24 @@ def add_violated_dcc(model: gp.Model):
     # Build graph
     G = nx.DiGraph()
     for (i, j), val in model._y_values.items():
-        if val > 1e-5:
-            G.add_edge(i, j, capacity=val)
-
+        G.add_edge(i, j, capacity=val)
+            
     G.add_node(0)
+    root = max(model._r_value, key=model._r_value.get)
+    # root_val = max(model._r_value.values())
+    # G.add_edge(0, root, capacity=root_val)
+    # print(root, root_val)
     for i, val in model._r_value.items():
-        if val > 1e-5:
-            G.add_edge(0, i, capacity=val)
+        G.add_edge(0, i, capacity=val)
 
-    selected_nodes = [node for node,val in model._x_values.items() if val > 1e-5]
+    for t in G:
+        if t==0 or t==root:
+            continue
 
-    for t in selected_nodes:
         cut_val, (A, B) = nx.minimum_cut(G, 0, t)
         if cut_val + 1e-5 < model._x_values[t]:
-            cut_edges = [(u, v) for u in A for v in B if (u, v) in model._y]
-            model.cbLazy(gp.quicksum(model._y[u, v] for (u, v) in cut_edges) >= model._x[t])
+            cut_edges = [(u,v) for (u,v) in model._y_values if u in A and v in B]
+            model.cbLazy(gp.quicksum(model._y[u,v] for (u,v) in cut_edges) >= model._x[t])
             return
     pass
 
